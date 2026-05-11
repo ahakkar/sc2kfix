@@ -12,6 +12,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 #pragma intrinsic(_ReturnAddress)
 
@@ -537,56 +538,95 @@ void L_PlayToolSound_SC2K1996(CSimcityAppPrimary *pSCApp, int iSoundID) {
 
 void InstallSoundEngineHooks_SC2K1996(void) {
 	// Hook CSound::PlayPrioritySound
-	VirtualProtect((LPVOID)0x401163, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401163, Hook_Sound_PlayPrioritySound);
+	SafePatchJmp(
+		(LPVOID)0x401163,
+		Hook_Sound_PlayPrioritySound,
+		"Hook_Sound_PlayPrioritySound"
+	);
 
 	// Hook CSound::InitSoundLayer
-	VirtualProtect((LPVOID)0x4015FF, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4015FF, Hook_Sound_InitSoundLayer);
+	SafePatchJmp(
+		(LPVOID)0x4015FF,
+		Hook_Sound_InitSoundLayer,
+		"Hook_Sound_InitSoundLayer"
+	);
 
 	// Hook CSound::StopSoundBySoundID
-	VirtualProtect((LPVOID)0x4019F1, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4019F1, Hook_Sound_StopSoundBySoundID);
+	SafePatchJmp(
+		(LPVOID)0x4019F1,
+		Hook_Sound_StopSoundBySoundID,
+		"Hook_Sound_StopSoundBySoundID"
+	);
 
 	// Hook CSound::StopSound
-	VirtualProtect((LPVOID)0x401BB3, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401BB3, Hook_Sound_StopSound);
+	SafePatchJmp(
+		(LPVOID)0x401BB3,
+		Hook_Sound_StopSound,
+		"Hook_Sound_StopSound"
+	);
 
 	// Hook sound buffer loading
-	VirtualProtect((LPVOID)0x401F9B, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401F9B, Hook_LoadSoundIntoBuffer);
+	SafePatchJmp(
+		(LPVOID)0x401F9B,
+		Hook_LoadSoundIntoBuffer,
+		"Hook_LoadSoundIntoBuffer"
+	);
 
 	// Hook CSound::LoadClickSound
-	VirtualProtect((LPVOID)0x40212B, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40212B, Hook_Sound_LoadClickSound);
+	SafePatchJmp(
+		(LPVOID)0x40212B,
+		Hook_Sound_LoadClickSound,
+		"Hook_Sound_LoadClickSound"
+	);
 
 	// Hook CSound::LoadExplosionSound
-	VirtualProtect((LPVOID)0x40257C, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40257C, Hook_Sound_LoadExplosionSound);
+	SafePatchJmp(
+		(LPVOID)0x40257C,
+		Hook_Sound_LoadExplosionSound,
+		"Hook_Sound_LoadExplosionSound"
+	);
 
 	// Hook CSound::DestroySoundLayer
-	VirtualProtect((LPVOID)0x4026CB, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4026CB, Hook_Sound_DestroySoundLayer);
+	SafePatchJmp(
+		(LPVOID)0x4026CB,
+		Hook_Sound_DestroySoundLayer,
+		"Hook_Sound_DestroySoundLayer"
+	);
 
 	// Hook CSound::PlayActionSound
-	VirtualProtect((LPVOID)0x4026DF, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4026DF, Hook_Sound_PlayActionThingSound);
+	SafePatchJmp(
+		(LPVOID)0x4026DF,
+		Hook_Sound_PlayActionThingSound,
+		"Hook_Sound_PlayActionThingSound"
+	);
 
 	// Hook CSound::GetToolSound
-	VirtualProtect((LPVOID)0x40291E, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40291E, Hook_Sound_GetToolSound);
+	SafePatchJmp(
+		(LPVOID)0x40291E,
+		Hook_Sound_GetToolSound,
+		"Hook_Sound_GetToolSound"
+	);
 
 	// Hook CSound::LoadThingSound
-	VirtualProtect((LPVOID)0x402B8A, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402B8A, Hook_Sound_LoadActionThingSound);
+	SafePatchJmp(
+		(LPVOID)0x402B8A,
+		Hook_Sound_LoadActionThingSound,
+		"Hook_Sound_LoadActionThingSound"
+	);
 
 	// Hook CSound::StopActionSound
-	VirtualProtect((LPVOID)0x402F31, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402F31, Hook_Sound_StopActionThingSound);
+	SafePatchJmp(
+		(LPVOID)0x402F31,
+		Hook_Sound_StopActionThingSound,
+		"Hook_Sound_StopActionThingSound"
+	);
 
 	// Hook CSound::PlaySound
-	VirtualProtect((LPVOID)0x403026, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x403026, Hook_Sound_PlaySound);
+	SafePatchJmp(
+		(LPVOID)0x403026,
+		Hook_Sound_PlaySound,
+		"Hook_Sound_PlaySound"
+	);
 
 	// Load the replacement sound resources
 	LoadReplacementSoundFromResource(IDR_WAVE_500, SOUND_BUILD);
