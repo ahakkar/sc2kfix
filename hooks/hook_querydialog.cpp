@@ -20,6 +20,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 static DWORD dwDummy;
 
@@ -540,44 +541,62 @@ extern "C" void __declspec(naked) Hook_QuerySpecificDialog_PaintSoundTriggerTwea
 
 void InstallQueryHooks_SC2K1996(void) {
 	//ConsoleLog(LOG_DEBUG, "MISC: Installing query hooks.\n");
+	SafePatchJmp(
+		(LPVOID)0x401CFD,
+		Hook_QuerySpecificItem,
+		"Hook_QuerySpecificItem"
+	);
 
-	VirtualProtect((LPVOID)0x401CFD, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401CFD, Hook_QuerySpecificItem);
-
-	VirtualProtect((LPVOID)0x402E19, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402E19, Hook_QueryGeneralItem);
+	SafePatchJmp(
+		(LPVOID)0x402E19,
+		Hook_QueryGeneralItem,
+		"Hook_QueryGeneralItem"
+	);
 
 	// Hook into the CQuerySpecificDialog::OnInitDialog function
-	VirtualProtect((LPVOID)0x4019C9, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4019C9, Hook_QuerySpecificDialog_OnInitDialog);
+	SafePatchJmp(
+		(LPVOID)0x4019C9,
+		Hook_QuerySpecificDialog_OnInitDialog,
+		"Hook_QuerySpecificDialog_OnInitDialog"
+	);
 
 	// Hook into the CQueryGeneralDialog::OnInitDialog function
-	VirtualProtect((LPVOID)0x402C89, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402C89, Hook_QueryGeneralDialog_OnInitDialog);
+	SafePatchJmp(
+		(LPVOID)0x402C89,
+		Hook_QueryGeneralDialog_OnInitDialog,
+		"Hook_QueryGeneralDialog_OnInitDialog"
+	);
 
 	// Let's remove the limitation concerning image size for large
 	// buildings in the "Specific" query dialogue.
-	VirtualProtect((LPVOID)0x4274F5, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x4274F8 = 0xE8;
-	*(BYTE*)0x4274F9 = 0x03;
-	VirtualProtect((LPVOID)0x42779E, 4, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x4277A0 = 0xE8;
-	*(BYTE*)0x4277A1 = 0x03;
+	SafePatchBytes((LPVOID)0x4274F8, (const BYTE*)"\xE8\x03", 2, "FixImageSize_Part1");
+	SafePatchBytes((LPVOID)0x4277A0, (const BYTE*)"\xE8\x03", 2, "FixImageSize_Part2");
 
 	// Hook into the sound trigger portion of CQuerySpecificDialog::OnPaint()
 	// in order to stop the sound from being repeatedly played as a result of
 	// the animation redraw trigger.
-	VirtualProtect((LPVOID)0x427861, 24, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memset((LPVOID)0x427861, 0x90, 24);
-	NEWJMP((LPVOID)0x427861, Hook_QuerySpecificDialog_PaintSoundTriggerTweak);
+
+	SafePatchNop((LPVOID)0x427861, 24, "Hook_QuerySpecificDialog_PaintSoundTriggerTweak_Nop");
+	SafePatchJmp(
+		(LPVOID)0x427861,
+		Hook_QuerySpecificDialog_PaintSoundTriggerTweak,
+		"Hook_QuerySpecificDialog_PaintSoundTriggerTweak_Jmp"
+	);
 
 	// Patch the maximum so it's reduced from GAME_MAP_SIZE to GAME_MAP_SIZE - 1
 	// otherwise a failure was occurring as it was attempting to fetch the XTRF
 	// values which halted all subsequent painting.
 	// Even though this issue only cropped up when the X coordinate was 127
 	// it has been adjusted for both X and Y cases.
-	VirtualProtect((LPVOID)0x4284F3, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x4284F3 = MAP_EDGE_MAX;
-	VirtualProtect((LPVOID)0x42851D, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x42851D = MAP_EDGE_MAX;
+	SafePatchByte(
+		(LPVOID)0x4284F3,
+		MAP_EDGE_MAX,
+		"Hook_MAP_EDGE_MAX"
+	);
+
+	SafePatchByte(
+		(LPVOID)0x42851D,
+		MAP_EDGE_MAX,
+		"Hook_MAP_EDGE_MAX"
+	);
 }

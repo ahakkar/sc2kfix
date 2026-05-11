@@ -12,6 +12,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 #pragma intrinsic(_ReturnAddress)
 
@@ -557,6 +558,9 @@ void PorntipsGuzzardo(void) {
 	AdjustDebugMenu(hDebugMenu);
 
 	// Hook for CMainFrame::OnChar
-	VirtualProtect((LPVOID)0x4029E1, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4029E1, Hook_MainFrame_OnChar);
+	SafePatchJmp(
+		(LPVOID)0x4029E1,
+		Hook_MainFrame_OnChar,
+		"Hook_MainFrame_OnChar"
+	);
 }
