@@ -28,6 +28,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 #pragma intrinsic(_ReturnAddress)
 
@@ -2261,24 +2262,30 @@ void InstallMiscHooks_SC2K1996(void) {
 	InstallMovieHooks();
 
 	// Hook into the CFileDialog::DoModal function
-	VirtualProtect((LPVOID)0x49FE18, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x49FE18, Hook_FileDialog_DoModal);
+	SafePatchJmp(
+		(LPVOID)0x49FE18,
+		Hook_FileDialog_DoModal,
+		"Hook_FileDialog_DoModal"
+	);
 
 	// Hook into the CGameDialog::DoModal function
-	VirtualProtect((LPVOID)0x40219E, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40219E, Hook_GameDialog_DoModal);
+	SafePatchJmp(
+		(LPVOID)0x40219E,
+		Hook_GameDialog_DoModal,
+		"Hook_GameDialog_DoModal"
+	);
 
 	// Hook into the CGameDialog::OnDestroy function
-	VirtualProtect((LPVOID)0x401532, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401532, Hook_GameDialog_OnDestroy);
+	SafePatchJmp(
+		(LPVOID)0x401532,
+		Hook_GameDialog_OnDestroy,
+		"Hook_GameDialog_OnDestroy"
+	);
 
 	// Fix the sign fonts
-	VirtualProtect((LPVOID)0x4E7267, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x4E7267 = 'a';
-	VirtualProtect((LPVOID)0x44DC42, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x44DC42 = 5;
-	VirtualProtect((LPVOID)0x44DC4F, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x44DC4F = 10;
+	SafePatchByte((LPVOID)0x4E7267, 'a', "FixSignFonts_a");
+	SafePatchByte((LPVOID)0x44DC42, 5, "FixSignFonts_5");
+	SafePatchByte((LPVOID)0x44DC4F, 10, "FixSignFonts_10");
 
 	// Hook for CSimcityApp::InitInstance to bypass and fix:
 	// a) Set m_nCmdShow to 'SW_MAXIMIZE' by default rather than
@@ -2290,34 +2297,52 @@ void InstallMiscHooks_SC2K1996(void) {
 	//    (Win9x ShellOpen path conversion to DOS-type, of which didn't
 	//    occur from NT 5.0 and beyond).
 	// (This also accounts for the initial ShowWindow case)
-	VirtualProtect((LPVOID)0x405859, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x405859, Hook_SimcityApp_InitInstanceFix);
+	SafePatchJmp(
+		(LPVOID)0x405859,
+		Hook_SimcityApp_InitInstanceFix,
+		"Hook_SimcityApp_InitInstanceFix"
+	);
 
 	// Hook CSimcityApp::OnQuit
-	VirtualProtect((LPVOID)0x401753, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401753, Hook_SimcityApp_OnQuit);
+	SafePatchJmp(
+		(LPVOID)0x401753,
+		Hook_SimcityApp_OnQuit,
+		"Hook_SimcityApp_OnQuit"
+	);
 
 	InstallSpriteAndTileSetHooks_SC2K1996();
 
 	// Hook CSimcityApp::BuildSubFrames
-	VirtualProtect((LPVOID)0x402A3B, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402A3B, Hook_SimcityApp_BuildSubFrames);
+	SafePatchJmp(
+		(LPVOID)0x402A3B,
+		Hook_SimcityApp_BuildSubFrames,
+		"Hook_SimcityApp_BuildSubFrames"
+	);
 
 	// Fix the Maxis Presents logo not being shown
-	VirtualProtect((LPVOID)0x4E6130, 13, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memset((LPVOID)0x4E6130, 0, 13);
-	memcpy_s((LPVOID)0x4E6130, 13, "presnts.bmp", 13);
+	SafePatchBytes(
+		(LPVOID)0x4E6130,
+		(const BYTE*)"presnts.bmp",
+		12,
+		"MaxisPresents_logo_fix"
+	);
 
 	// Install hooks for saving and loading
 	InstallSaveHooks_SC2K1996();
 
 	// Hook into the PrepareGame function.
-	VirtualProtect((LPVOID)0x401578, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401578, Hook_PrepareGame);
+	SafePatchJmp(
+		(LPVOID)0x401578,
+		Hook_PrepareGame,
+		"Hook_PrepareGame"
+	);
 
 	// Hook into the StartCleanGame function.
-	VirtualProtect((LPVOID)0x401F05, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401F05, Hook_StartCleanGame);
+	SafePatchJmp(
+		(LPVOID)0x401F05,
+		Hook_StartCleanGame,
+		"Hook_StartCleanGame"
+	);
 
 	InstallDrawingHooks_SC2K1996();
 
@@ -2333,31 +2358,49 @@ void InstallMiscHooks_SC2K1996(void) {
 	InstallMusicEngineHooks();
 
 	// Hook for CMainFrame::OnActivateApp
-	VirtualProtect((LPVOID)0x40203B, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40203B, Hook_MainFrame_OnActivateApp);
+	SafePatchJmp(
+		(LPVOID)0x40203B,
+		Hook_MainFrame_OnActivateApp,
+		"Hook_MainFrame_OnActivateApp"
+	);
 
 	// Hook for CMainFrame::OnSize
-	VirtualProtect((LPVOID)0x4027DE, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4027DE, Hook_MainFrame_OnSize);
+	SafePatchJmp(
+		(LPVOID)0x4027DE,
+		Hook_MainFrame_OnSize,
+		"Hook_MainFrame_OnSize"
+	);
 
 	// Hook for CMainFrame::OnShowWindow
-	VirtualProtect((LPVOID)0x401A50, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401A50, Hook_MainFrame_OnShowWindow);
+	SafePatchJmp(
+		(LPVOID)0x401A50,
+		Hook_MainFrame_OnShowWindow,
+		"Hook_MainFrame_OnShowWindow"
+	);
 
 	// Hook for CMainFrame::OnKeyDown
-	VirtualProtect((LPVOID)0x402D8D, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402D8D, Hook_MainFrame_OnKeyDown);
+	SafePatchJmp(
+		(LPVOID)0x402D8D,
+		Hook_MainFrame_OnKeyDown,
+		"Hook_MainFrame_OnKeyDown"
+	);
 
 	// Hook status bar updates for the status dialog implementation
 	InstallStatusHooks_SC2K1996();
 
 	// Hook for ShowViewControls
-	VirtualProtect((LPVOID)0x4021D5, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4021D5, Hook_ShowViewControls);
+	SafePatchJmp(
+		(LPVOID)0x4021D5,
+		Hook_ShowViewControls,
+		"Hook_ShowViewControls"
+	);
 
 	// Hook for CMainFrame::UpdateSections
-	VirtualProtect((LPVOID)0x40131B, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40131B, Hook_MainFrame_UpdateSections);
+	SafePatchJmp(
+		(LPVOID)0x40131B,
+		Hook_MainFrame_UpdateSections,
+		"Hook_MainFrame_UpdateSections"
+	);
 
 	InstallToolBarHooks_SC2K1996();
 
@@ -2365,22 +2408,37 @@ void InstallMiscHooks_SC2K1996(void) {
 	// SimulationProcessTick - these account for:
 	// 1) Including the day of the month in the window title.
 	// 2) The fine-grained simulation updates.
-	VirtualProtect((LPVOID)0x4017B2, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4017B2, Hook_SimcityDoc_UpdateDocumentTitle);
-	VirtualProtect((LPVOID)0x401820, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401820, Hook_Engine_SimulationProcessTick);
+	SafePatchJmp(
+		(LPVOID)0x4017B2,
+		Hook_SimcityDoc_UpdateDocumentTitle,
+		"Hook_SimcityDoc_UpdateDocumentTitle"
+	);
+	SafePatchJmp(
+		(LPVOID)0x401820,
+		Hook_Engine_SimulationProcessTick,
+		"Hook_Engine_SimulationProcessTick"
+	);
 
 	// Hook SimulationStartDisaster
-	VirtualProtect((LPVOID)0x402527, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402527, Hook_SimulationStartDisaster);
+	SafePatchJmp(
+		(LPVOID)0x402527,
+		Hook_SimulationStartDisaster,
+		"Hook_SimulationStartDisaster"
+	);
 
 	// Hook AddAllInventions
-	VirtualProtect((LPVOID)0x402388, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402388, Hook_AddAllInventions);
+	SafePatchJmp(
+		(LPVOID)0x402388,
+		Hook_AddAllInventions,
+		"Hook_AddAllInventions"
+	);
 
 	// Hook CWnd::OnCommand
-	VirtualProtect((LPVOID)0x4A5352, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4A5352, Hook_Wnd_OnCommand);
+	SafePatchJmp(
+		(LPVOID)0x4A5352,
+		Hook_Wnd_OnCommand,
+		"Hook_Wnd_OnCommand"
+	);
 
 	// Add more buttons to SC2K's menus
 	hMainMenu = LoadMenu(hSC2KAppModule, MAKEINTRESOURCE(2));
@@ -2476,32 +2534,53 @@ void InstallMiscHooks_SC2K1996(void) {
 
 skipgamemenu:
 	// Hook for CSimcityView::OnLButtonDown
-	VirtualProtect((LPVOID)0x401523, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401523, Hook_SimcityView_OnLButtonDown);
+	SafePatchJmp(
+		(LPVOID)0x401523,
+		Hook_SimcityView_OnLButtonDown,
+		"Hook_SimcityView_OnLButtonDown"
+	);
 
 	// Hook for CSimcityView::OnMouseMove
-	VirtualProtect((LPVOID)0x4016EA, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4016EA, Hook_SimcityView_OnMouseMove);
+	SafePatchJmp(
+		(LPVOID)0x4016EA,
+		Hook_SimcityView_OnMouseMove,
+		"Hook_SimcityView_OnMouseMove"
+	);
 
 	// Hook for CSimcityView::OnRButtonDown
-	VirtualProtect((LPVOID)0x401C9E, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401C9E, Hook_SimcityView_OnRButtonDown);
+	SafePatchJmp(
+		(LPVOID)0x401C9E,
+		Hook_SimcityView_OnRButtonDown,
+		"Hook_SimcityView_OnRButtonDown"
+	);
 
 	// Hook for CSimcityApp::LoadCursorResources
-	VirtualProtect((LPVOID)0x402234, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402234, Hook_SimcityApp_LoadCursorResources);
+	SafePatchJmp(
+		(LPVOID)0x402234,
+		Hook_SimcityApp_LoadCursorResources,
+		"Hook_SimcityApp_LoadCursorResources"
+	);
 
 	// Hook for StartupGraphics
-	VirtualProtect((LPVOID)0x4014DD, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4014DD, Hook_StartupGraphics);
+	SafePatchJmp(
+		(LPVOID)0x4014DD,
+		Hook_StartupGraphics,
+		"Hook_StartupGraphics"
+	);
 
 	// Hook for CCmdUI::Enable
-	VirtualProtect((LPVOID)0x4A296A, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4A296A, Hook_CmdUI_Enable);
+	SafePatchJmp(
+		(LPVOID)0x4A296A,
+		Hook_CmdUI_Enable,
+		"Hook_CmdUI_Enable"
+	);
 
 	// Hook the scenario start dialog so we can save the description
-	VirtualProtect((LPVOID)0x402B4E, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402B4E, Hook_DisplayInformationMessageBox);
+	SafePatchJmp(
+		(LPVOID)0x402B4E,
+		Hook_DisplayInformationMessageBox,
+		"Hook_DisplayInformationMessageBox"
+	);
 
 	// Skip over the strange bit of code that re-arranges the original main menu.
 	// 
@@ -2510,9 +2589,8 @@ skipgamemenu:
 	// using our own dialog resource for the main menu) programatically resizes the dialog and
 	// rearranges the buttons to fit on it. Why they didn't just fix the button coordinates in
 	// the dialog resource instead is beyond me.
-	VirtualProtect((LPVOID)0x41503F, 6, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP(0x41503F, 0x415161);
-	*(BYTE*)0x415044 = 0x90;
+	SafePatchJmp((LPVOID)0x41503F, (LPVOID)0x415161, "MainMenu_SkipRearrange");
+	SafePatchNop((LPVOID)0x415044, 1, "MainMenu_SkipRearrange_Nop");
 
 	// Call your cousin Vinnie!
 	PorntipsGuzzardo();
