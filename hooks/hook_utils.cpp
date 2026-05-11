@@ -17,12 +17,24 @@ static bool UnprotectAndPatch(
 {
     MEMORY_BASIC_INFORMATION mbi = {};
     if (VirtualQuery(targetAddress, &mbi, sizeof(mbi)) == 0) {
-        // log error
+        ConsoleLog(LOG_CRITICAL,
+            "[%s] VirtualQuery failed at %p (error %lu)",
+            debugName,
+            targetAddress,
+            GetLastError()
+        );
+
         return false;
     }
 
     if (mbi.State != MEM_COMMIT) {
-        // log error: not committed
+        ConsoleLog(LOG_CRITICAL,
+            "[%s] Memory at %p is not committed (state: 0x%lX)",
+            debugName,
+            targetAddress,
+            mbi.State
+        );
+
         return false;
     }
 

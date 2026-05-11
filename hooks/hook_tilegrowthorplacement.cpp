@@ -13,6 +13,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 #pragma intrinsic(_ReturnAddress)
 
@@ -2181,24 +2182,39 @@ FAIL:
 
 void InstallTileGrowthOrPlacementHandlingHooks_SC2K1996(void) {
 	// Hook into the SimulationGrowthTick function
-	VirtualProtect((LPVOID)0x4022FC, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4022FC, Hook_SimulationGrowthTick);
+	SafePatchJmp(
+		(LPVOID)0x4022FC,
+		Hook_SimulationGrowthTick,
+		"Hook_SimulationGrowthTick"
+	);
 
 	// Hook into the SimulationGrowSpecificZone function
-	VirtualProtect((LPVOID)0x4026B2, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4026B2, Hook_SimulationGrowSpecificZone);
+	SafePatchJmp(
+		(LPVOID)0x4026B2,
+		Hook_SimulationGrowSpecificZone,
+		"Hook_SimulationGrowSpecificZone"
+	);
 
 	// Hook into the PlacePowerLinesAtCoordinates function
-	VirtualProtect((LPVOID)0x402725, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402725, Hook_PlacePowerLinesAtCoordinates);
+	SafePatchJmp(
+		(LPVOID)0x402725,
+		Hook_PlacePowerLinesAtCoordinates,
+		"Hook_PlacePowerLinesAtCoordinates"
+	);
 
 	// Hook into the ItemPlacementCheck function
-	VirtualProtect((LPVOID)0x4027F2, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4027F2, Hook_ItemPlacementCheck);
+	SafePatchJmp(
+		(LPVOID)0x4027F2,
+		Hook_ItemPlacementCheck,
+		"Hook_ItemPlacementCheck"
+	);
 
 	// Hook CityToolPlaceSelectedBuilding
-	VirtualProtect((LPVOID)0x401005, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401005, Hook_CityToolPlaceSelectedBuilding);
+	SafePatchJmp(
+		(LPVOID)0x401005,
+		Hook_CityToolPlaceSelectedBuilding,
+		"Hook_CityToolPlaceSelectedBuilding"
+	);
 
 	// Military base hooks
 	InstallMilitaryHooks_SC2K1996();

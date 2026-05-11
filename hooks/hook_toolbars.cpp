@@ -12,6 +12,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 #pragma intrinsic(_ReturnAddress)
 
@@ -1049,36 +1050,63 @@ void InstallToolBarHooks_SC2K1996(void) {
 	// Both of which are called when a modal CGameDialog is opened.
 	// The purpose in this case will be to temporarily alter the parent
 	// of the status widget (if it is in floating mode) so interaction is disabled.
-	VirtualProtect((LPVOID)0x402937, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402937, Hook_CityToolBar_ToolMenuDisable);
-	VirtualProtect((LPVOID)0x401519, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401519, Hook_CityToolBar_ToolMenuEnable);
+	SafePatchJmp(
+		(LPVOID)0x402937,
+		Hook_CityToolBar_ToolMenuDisable,
+		"Hook_CityToolBar_ToolMenuDisable"
+	);
+	SafePatchJmp(
+		(LPVOID)0x401519,
+		Hook_CityToolBar_ToolMenuEnable,
+		"Hook_CityToolBar_ToolMenuEnable"
+	);
 
 	// Hook CCityToolBar::OnLButtonDown
-	VirtualProtect((LPVOID)0x4026AD, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4026AD, Hook_CityToolBar_OnLButtonDown);
+	SafePatchJmp(
+		(LPVOID)0x4026AD,
+		Hook_CityToolBar_OnLButtonDown,
+		"Hook_CityToolBar_OnLButtonDown"
+	);
 
 	// Hook CCityToolBar::SetSelection
-	VirtualProtect((LPVOID)0x402A1D, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402A1D, Hook_CityToolBar_SetSelection);
+	SafePatchJmp(
+		(LPVOID)0x402A1D,
+		Hook_CityToolBar_SetSelection,
+		"Hook_CityToolBar_SetSelection"
+	);
 
 	// Hook CMapToolBar::OnLButtonDown
-	VirtualProtect((LPVOID)0x401406, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401406, Hook_MapToolBar_OnLButtonDown);
+	SafePatchJmp(
+		(LPVOID)0x401406,
+		Hook_MapToolBar_OnLButtonDown,
+		"Hook_MapToolBar_OnLButtonDown"
+	);
 
 	// Hook CMapToolBar::SetSelection
-	VirtualProtect((LPVOID)0x402A5E, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402A5E, Hook_MapToolBar_SetSelection);
+	SafePatchJmp(
+		(LPVOID)0x402A5E,
+		Hook_MapToolBar_SetSelection,
+		"Hook_MapToolBar_SetSelection"
+	);
 
 	// Hook for CCityToolBar::DrawRCIIndicator
-	VirtualProtect((LPVOID)0x402EAF, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402EAF, Hook_CityToolBar_DrawRCIIndicator);
+	SafePatchJmp(
+		(LPVOID)0x402EAF,
+		Hook_CityToolBar_DrawRCIIndicator,
+		"Hook_CityToolBar_DrawRCIIndicator"
+	);
 
 	// Hook for the CityToolMenuAction call.
-	VirtualProtect((LPVOID)0x402C25, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402C25, Hook_CityToolMenuAction);
+	SafePatchJmp(
+		(LPVOID)0x402C25,
+		Hook_CityToolMenuAction,
+		"Hook_CityToolMenuAction"
+	);
 
 	// Hook for the MapToolMenuAction call.
-	VirtualProtect((LPVOID)0x402B44, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402B44, Hook_MapToolMenuAction);
+	SafePatchJmp(
+		(LPVOID)0x402B44,
+		Hook_MapToolMenuAction,
+		"Hook_MapToolMenuAction"
+	);
 }
