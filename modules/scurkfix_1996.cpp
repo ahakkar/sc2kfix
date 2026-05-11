@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include <sc2kfix.h>
+#include <hook_utils.h>
 
 static DWORD dwDummy;
 
@@ -92,25 +93,42 @@ void InstallFixes_SCURK1996(void) {
 	L_SCURK_InitDOSMacPaletteIdxTable();
 
 	// Hook for palette animation fix
-	VirtualProtect((LPVOID)0x449800, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x449800, Hook_SCURK_winscurkMDIClient_CycleColors);
+	SafePatchJmp(
+		(LPVOID)0x449800,
+		Hook_SCURK_winscurkMDIClient_CycleColors,
+		"Hook_SCURK_winscurkMDIClient_CycleColors"
+	);
 	ConsoleLog(LOG_INFO, "CORE: Patched palette animation fix for SCURK.\n");
 
 	// Add back the internal debug notices for tracing purposes.
-	VirtualProtect((LPVOID)0x4132E8, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4132E8, Hook_SCURK1996_DebugOut);
+	SafePatchJmp(
+		(LPVOID)0x4132E8,
+		Hook_SCURK1996_DebugOut,
+		"Hook_SCURK1996_DebugOut"
+	);
 
 	// These hooks are to account for the Place&Pick selection dialogue
 	// malfunctions that were occurring under Win11 24H2+:
 	// 1) The Listbox was no longer displayed
 	// 2) Mouse selection was no longer recognised - or rather
 	//    the stored point within the window wasn't recorded.
-	VirtualProtect((LPVOID)0x4104B8, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4104B8, Hook_SCURK_PlaceTileListDlg_SetupWindow);
-	VirtualProtect((LPVOID)0x410D94, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x410D94, Hook_SCURK_PlaceTileListDlg_EvLButtonDblClk);
-	VirtualProtect((LPVOID)0x410ED0, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x410ED0, Hook_SCURK_PlaceTileListDlg_EvLBNSelChange);
+	SafePatchJmp(
+		(LPVOID)0x4104B8,
+		Hook_SCURK_PlaceTileListDlg_SetupWindow,
+		"Hook_SCURK_PlaceTileListDlg_SetupWindow"
+	);
+
+	SafePatchJmp(
+		(LPVOID)0x410D94,
+		Hook_SCURK_PlaceTileListDlg_EvLButtonDblClk,
+		"Hook_SCURK_PlaceTileListDlg_EvLButtonDblClk"
+	);
+
+	SafePatchJmp(
+		(LPVOID)0x410ED0,
+		Hook_SCURK_PlaceTileListDlg_EvLBNSelChange,
+		"Hook_SCURK_PlaceTileListDlg_EvLBNSelChange"
+	);
 
 	// TEncodeDib::mFillAt
 	// TEncodeDib::mFillLine
@@ -120,47 +138,73 @@ void InstallFixes_SCURK1996(void) {
 	// cEditableTileSet::mRenderDBShapeToDIB calls that
 	// only apply when you switch back and forth between
 	// tiles). #1
-	VirtualProtect((LPVOID)0x4140F0, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4140F0, Hook_SCURK_EncodeDib_mFillAt);
-	VirtualProtect((LPVOID)0x4141E8, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4141E8, Hook_SCURK_EncodeDib_mFillLine);
+
+	SafePatchJmp(
+		(LPVOID)0x4140F0,
+		Hook_SCURK_EncodeDib_mFillAt,
+		"Hook_SCURK_EncodeDib_mFillAt"
+	);
+
+	SafePatchJmp(
+		(LPVOID)0x4141E8,
+		Hook_SCURK_EncodeDib_mFillLine,
+		"Hook_SCURK_EncodeDib_mFillLine"
+	);
 
 	// TEncodeDib::mDetermineShapeHeight
 	// Tweaks concerning height off-by-one cases.
-	VirtualProtect((LPVOID)0x414334, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x414334, Hook_SCURK_EncodeDib_mDetermineShapeHeight);
+	SafePatchJmp(
+		(LPVOID)0x414334,
+		Hook_SCURK_EncodeDib_mDetermineShapeHeight,
+		"Hook_SCURK_EncodeDib_mDetermineShapeHeight"
+	);
 
 	// TEncodeDib::mShrink
 	// Account for an ancient issue concerning the
 	// left-most column of pixels being missed
 	// (This was the most visible when it came to the
 	// Plymouth Arcology).
-	VirtualProtect((LPVOID)0x41437C, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x41437C, Hook_SCURK_EncodeDib_mShrink);
+	SafePatchJmp(
+		(LPVOID)0x41437C,
+		Hook_SCURK_EncodeDib_mShrink,
+		"Hook_SCURK_EncodeDib_mShrink"
+	);
 
 	// TEncodeDib::mEncodeShape
 	// Fixes concerning off-by-one situation
 	// as well as ensuring that once the bottom row
 	// has been processed it always uses the "End of Shape"
 	// mode.
-	VirtualProtect((LPVOID)0x414470, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x414470, Hook_SCURK_EncodeDib_mEncodeShape);
+	SafePatchJmp(
+		(LPVOID)0x414470,
+		Hook_SCURK_EncodeDib_mEncodeShape,
+		"Hook_SCURK_EncodeDib_mEncodeShape"
+	);
 
 	// Hook cEditableTileSet::mReadFromFile
 	// This call is used to load the TILES.DB.
-	VirtualProtect((LPVOID)0x41510C, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x41510C, Hook_SCURK_EditableTileSet_mReadFromFile);
+	SafePatchJmp(
+		(LPVOID)0x41510C,
+		Hook_SCURK_EditableTileSet_mReadFromFile,
+		"Hook_SCURK_EditableTileSet_mReadFromFile"
+	);
 
 	// cEditableTileSet::mWriteToMIFFFile
 	// Backup functionality added.
-	VirtualProtect((LPVOID)0x415460, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x415460, Hook_SCURK_EditableTileSet_mWriteToMIFFFile);
+	SafePatchJmp(
+		(LPVOID)0x415460,
+		Hook_SCURK_EditableTileSet_mWriteToMIFFFile,
+		"Hook_SCURK_EditableTileSet_mWriteToMIFFFile"
+	);
 
 	// cEditableTileSet::mReadFromMIFFFile
 	// Macintosh-type MIF detection added
 	// for proper palette processing.
-	VirtualProtect((LPVOID)0x415DD4, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x415DD4, Hook_SCURK_EditableTileSet_mReadFromMIFFFile);
+	SafePatchJmp(
+		(LPVOID)0x415DD4,
+		Hook_SCURK_EditableTileSet_mReadFromMIFFFile,
+		"Hook_SCURK_EditableTileSet_mReadFromMIFFFile"
+	);
 
 	// cEditableTileSet::mReadShapeFromDib
 	// PostBuild: This one concerns the reading of Shap information
@@ -169,10 +213,17 @@ void InstallFixes_SCURK1996(void) {
 	// from the PaintWindow's EncodedDib during EditWindow tile
 	// selection in-order to update the Small/Med objects based on
 	// the large object.
-	VirtualProtect((LPVOID)0x416988, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x416988, Hook_SCURK_EditableTileSet_mReadShapeFromDib_PostBuild);
-	VirtualProtect((LPVOID)0x416A74, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x416A74, Hook_SCURK_EditableTileSet_mReadShapeFromDib_Paint);
+	SafePatchJmp(
+		(LPVOID)0x416988,
+		Hook_SCURK_EditableTileSet_mReadShapeFromDib_PostBuild,
+		"Hook_SCURK_EditableTileSet_mReadShapeFromDib_PostBuild"
+	);
+
+	SafePatchJmp(
+		(LPVOID)0x416A74,
+		Hook_SCURK_EditableTileSet_mReadShapeFromDib_Paint,
+		"Hook_SCURK_EditableTileSet_mReadShapeFromDib_Paint"
+	);
 
 	// cEditableTileSet::mRenderDBShapeToDIB
 	// Dib: Encoded Shap to PaintWindow Dib
@@ -181,10 +232,17 @@ void InstallFixes_SCURK1996(void) {
 	// and the omission of portions of the
 	// right-most column of pixels on 4x4 objects
 	// (Plymouth Arcology being a prime example).
-	VirtualProtect((LPVOID)0x416CD8, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x416CD8, Hook_SCURK_EditableTileSet_mRenderDBShapeToDIB_Dib);
-	VirtualProtect((LPVOID)0x416E58, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x416E58, Hook_SCURK_EditableTileSet_mRenderDBShapeToDIB_Graphic);
+	SafePatchJmp(
+		(LPVOID)0x416CD8,
+		Hook_SCURK_EditableTileSet_mRenderDBShapeToDIB_Dib,
+		"Hook_SCURK_EditableTileSet_mRenderDBShapeToDIB_Dib"
+	);
+
+	SafePatchJmp(
+		(LPVOID)0x416E58,
+		Hook_SCURK_EditableTileSet_mRenderDBShapeToDIB_Graphic,
+		"Hook_SCURK_EditableTileSet_mRenderDBShapeToDIB_Graphic"
+	);
 
 	// cEditableTileSet::mRenderShapeToTile
 	// Shap to the tile selection on the following windows:
@@ -192,8 +250,11 @@ void InstallFixes_SCURK1996(void) {
 	// - Pick & Copy tiles for source and working sets
 	// - Paint the Town for the current working set
 	// Fix/adjustment concerning a vertical off-by-one case.
-	VirtualProtect((LPVOID)0x416FE0, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x416FE0, Hook_SCURK_EditableTileSet_mRenderShapeToTile);
+	SafePatchJmp(
+		(LPVOID)0x416FE0,
+		Hook_SCURK_EditableTileSet_mRenderShapeToTile,
+		"Hook_SCURK_EditableTileSet_mRenderShapeToTile"
+	);
 
 	// cEditableTileSet::mReadFromDOSFile
 	// Included a more comprehensive conversion
@@ -202,34 +263,34 @@ void InstallFixes_SCURK1996(void) {
 	// (At the moment processing only occurs
 	// for Shap objects that are within the
 	// bounds of the nEdNum range for WinSCURK).
-	VirtualProtect((LPVOID)0x4171AC, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4171AC, Hook_SCURK_EditableTileSet_mReadFromDOSFile);
+	SafePatchJmp(
+		(LPVOID)0x4171AC,
+		Hook_SCURK_EditableTileSet_mReadFromDOSFile,
+		"Hook_SCURK_EditableTileSet_mReadFromDOSFile"
+	);
 
 	// cPaintWindow::mEncodeShape
-	VirtualProtect((LPVOID)0x447138, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x447138, Hook_SCURK_PaintWindow_mEncodeShape);
-
+	SafePatchJmp(
+		(LPVOID)0x447138,
+		Hook_SCURK_PaintWindow_mEncodeShape,
+		"Hook_SCURK_PaintWindow_mEncodeShape"
+	);
 	// 'nop' out the -1 case in the following functions in-regards to the
 	// nMaxHorzScrollPos maximum extent:
 	// - cPaintWindow::mZoomOut
 	// - cPaintWindow::mZoomIn
 	// - cPaintWindow::EvHScroll
-	VirtualProtect((LPVOID)0x443D28, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE *)(0x443D28) = 0x90;
-	VirtualProtect((LPVOID)0x443D72, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE *)(0x443D72) = 0x90;
-	VirtualProtect((LPVOID)0x443E58, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE *)(0x443E58) = 0x90;
-	VirtualProtect((LPVOID)0x443E9D, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE *)(0x443E9D) = 0x90;
-	VirtualProtect((LPVOID)0x446F76, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE *)(0x446F76) = 0x90;
+	SafePatchNop((LPVOID)0x443D28, 1, "cPaintWindow::mZoomOut -1 case");
+	SafePatchNop((LPVOID)0x443D72, 1, "cPaintWindow::mZoomOut -1 case");
+	SafePatchNop((LPVOID)0x443E58, 1, "cPaintWindow::mZoomIn -1 case");
+	SafePatchNop((LPVOID)0x443E9D, 1, "cPaintWindow::mZoomIn -1 case");
+	SafePatchNop((LPVOID)0x446F76, 1, "cPaintWindow::EvHScroll -1 case");
+
 
 	// Increased the maximum extent by 1 to fix the lack of the last
 	// right-side column of pixels:
 	// cPaintWindow::cPaintWindow
-	VirtualProtect((LPVOID)0x4432B4, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE *)(0x4432B4) = 0x01;
+	SafePatchByte((LPVOID)0x4432B4, 0x01, "cPaintWindow::cPaintWindow max extent fix");
 
 	// cPaintWindow::mFill
 	// Tweaks concerning various off-by-one and alignment
@@ -238,8 +299,11 @@ void InstallFixes_SCURK1996(void) {
 	// cEditableTileSet::mRenderDBShapeToDIB calls that
 	// only apply when you switch back and forth between
 	// tiles). #2
-	VirtualProtect((LPVOID)0x4446D0, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4446D0, Hook_SCURK_PaintWindow_mFill);
+	SafePatchJmp(
+		(LPVOID)0x4446D0,
+		Hook_SCURK_PaintWindow_mFill,
+		"Hook_SCURK_PaintWindow_mFill"
+	);
 
 	// Hook cPaintWindow::mClipDrawing
 	// Fixes/Adjustments to prevent certain
@@ -248,18 +312,25 @@ void InstallFixes_SCURK1996(void) {
 	// shape you'd see at least one pixel on each
 	// row being clipped on the right-most side
 	// of the tile base).
-	VirtualProtect((LPVOID)0x443F04, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x443F04, Hook_SCURK_PaintWindow_mClipDrawing);
+	SafePatchJmp(
+		(LPVOID)0x443F04,
+		Hook_SCURK_PaintWindow_mClipDrawing,
+		"Hook_SCURK_PaintWindow_mClipDrawing"
+	);
 
 	// winscurkMDIFrame::AssignMenu
-	VirtualProtect((LPVOID)0x448294, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x448294, Hook_SCURK_winscurkMDIFrame_AssignMenu);
+	SafePatchJmp(
+		(LPVOID)0x448294,
+		Hook_SCURK_winscurkMDIFrame_AssignMenu,
+		"Hook_SCURK_winscurkMDIFrame_AssignMenu"
+	);
 
 	// winscurkMoverWindow::EvSize():
 	// Temporarily remove the TFrameWindow::EvSize call.
 	// This avoids some redrawing strangeness that otherwise occurs
 	// if the Pick&Copy window is in-focus and you then restore
 	// the Place&Pick window to its non-maximized state.
+
 	VirtualProtect((LPVOID)0x450095, 13, PAGE_EXECUTE_READWRITE, &dwDummy);
 	memset((LPVOID)0x450095, 0x90, 13);
 

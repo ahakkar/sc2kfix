@@ -13,6 +13,7 @@
 #include <time.h>
 
 #include <sc2kfix.h>
+#include <hook_utils.h>
 
 #define MOVIE_DEBUG_CALLS 1
 
@@ -113,14 +114,25 @@ extern "C" BOOL __cdecl Hook_MovieCheck(char* sMovStr) {
 }
 
 void InstallMovieHooks(void) {
-	if (mov_debug)
-		ConsoleLog(LOG_DEBUG, "MOV:  Loaded movie hooks.\n");
-
 	// Hook into the movie opening function.
-	VirtualProtect((LPVOID)0x401104, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401104, Hook_MovieOpen);
+	bool movieOpenHookResult = SafePatchJmp(
+		(LPVOID)0x401104,
+		Hook_MovieOpen,
+		"Hook_MovieOpen"
+	);
 
 	// Hook into the movie checking function.
-	VirtualProtect((LPVOID)0x402360, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402360, Hook_MovieCheck);
+	bool movieCheckHookResult = SafePatchJmp(
+		(LPVOID)0x402360,
+		Hook_MovieCheck,
+		"Hook_MovieCheck"
+	);
+
+	// Program is in unworkable state, terminating
+	if (!movieOpenHookResult || !movieCheckHookResult) {
+		TerminateProcess(GetCurrentProcess(), 1);
+	}	
+
+	if (mov_debug)
+		ConsoleLog(LOG_DEBUG, "MOV:  Loaded movie hooks.\n");
 }

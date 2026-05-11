@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include <sc2kfix.h>
+#include <hook_utils.h>
 
 static DWORD dwDummy;
 
@@ -254,16 +255,25 @@ extern "C" void __cdecl Hook_ToggleColorCycling_SC2KDemo(CMFC3XPalette *pPalette
 }
 
 void InstallAnimationHooks_SC2K1996(void) {
-	VirtualProtect((LPVOID)0x4023D3, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4023D3, Hook_ToggleColorCycling_SC2K1996);
+	SafePatchJmp(
+		(LPVOID)0x4023D3,
+		Hook_ToggleColorCycling_SC2K1996,
+		"Hook_ToggleColorCycling_SC2K1996"
+	);
 }
 
 void InstallAnimationHooks_SC2K1995(void) {
-	VirtualProtect((LPVOID)0x402405, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402405, Hook_ToggleColorCycling_SC2K1995);
+	SafePatchJmp(
+		(LPVOID)0x402405,
+		Hook_ToggleColorCycling_SC2K1995,
+		"Hook_ToggleColorCycling_SC2K1995"
+	);
 }
 
 void InstallAnimationHooks_SC2KDemo(void) {
-	VirtualProtect((LPVOID)0x402473, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402473, Hook_ToggleColorCycling_SC2KDemo);
+	SafePatchJmp(
+		(LPVOID)0x402473,
+		Hook_ToggleColorCycling_SC2KDemo,
+		"Hook_ToggleColorCycling_SC2KDemo"
+	);
 }
