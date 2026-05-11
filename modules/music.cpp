@@ -12,6 +12,7 @@
 
 #include <sc2kfix.h>
 #include <fluidsynth.h>
+#include <hook_utils.h>
 
 #define MUS_DEBUG_SONGS 1
 #define MUS_DEBUG_THREAD 2
@@ -694,23 +695,38 @@ extern "C" void __stdcall Hook_SimcityApp_MusicPlayNext(BOOL bNext) {
 
 void InstallMusicEngineHooks(void) {
 	// Restore additional music
-	VirtualProtect((LPVOID)0x401A9B, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401A9B, Hook_SimcityApp_MusicPlayNextRefocusSong);
+	SafePatchJmp(
+		(LPVOID)0x401A9B,
+		Hook_SimcityApp_MusicPlayNextRefocusSong,
+		"Hook_SimcityApp_MusicPlayNextRefocusSong"
+	);
 
 	// Hook for CSimcityApp::MusicPlayNext
-	VirtualProtect((LPVOID)0x402AEF, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402AEF, Hook_SimcityApp_MusicPlayNext);
+	SafePatchJmp(
+		(LPVOID)0x402AEF,
+		Hook_SimcityApp_MusicPlayNext,
+		"Hook_SimcityApp_MusicPlayNext"
+	);
 
 	// Shuffle music if the shuffle setting is enabled
 	MusicShufflePlaylist(0);
 
 	// Replace music functions with ones to post messages to the music thread
-	VirtualProtect((LPVOID)0x40145B, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40145B, Hook_MainFrame_OnMCINotify);
-	VirtualProtect((LPVOID)0x402414, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402414, Hook_SimcityApp_MusicPlay);
-	VirtualProtect((LPVOID)0x402BE4, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402BE4, Hook_Sound_MusicStop);
+	SafePatchJmp(
+		(LPVOID)0x40145B,
+		Hook_MainFrame_OnMCINotify,
+		"Hook_MainFrame_OnMCINotify"
+	);
+	SafePatchJmp(
+		(LPVOID)0x402414,
+		Hook_SimcityApp_MusicPlay,
+		"Hook_SimcityApp_MusicPlay"
+	);
+	SafePatchJmp(
+		(LPVOID)0x402BE4,
+		Hook_Sound_MusicStop,
+		"Hook_Sound_MusicStop"
+	);
 
 	// XXX - effectively always TRUE because the opt-in setting is now always TRUE as of
 	// r10-dev 2025-08-31. maybe this needs to go away?

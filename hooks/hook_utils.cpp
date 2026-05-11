@@ -109,3 +109,15 @@ bool SafePatchBytes(LPVOID targetAddress, const BYTE* bytes, SIZE_T size, const 
     return UnprotectAndPatch(targetAddress, size, debugName, WriteBytes, &p);
 }
 
+// ----------------------------------------------------------------
+// CALL patch
+// ----------------------------------------------------------------
+struct CallParam { LPVOID hookFn; };
+static void WriteCall(LPVOID target, void* param) {
+    CallParam* p = (CallParam*)param;
+    NEWCALL(target, p->hookFn);
+}
+bool SafePatchCall(LPVOID targetAddress, LPVOID hookFunction, const char* debugName) {
+    CallParam p = { hookFunction };
+    return UnprotectAndPatch(targetAddress, 5, debugName, WriteCall, &p);
+}

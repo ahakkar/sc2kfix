@@ -15,6 +15,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 //#define SC2X_USE_VANILLA_LOAD_REPLACEMENT
 
@@ -872,38 +873,67 @@ extern "C" void __stdcall Hook_LoadNeighborConnections1500(void) {
 void InstallSaveHooks_SC2K1996(void) {
 	// Fix city name being overwritten by filename on save
 	BYTE bFilenamePatch[6] = { 0xB9, 0xA0, 0xA1, 0x4C, 0x00, 0x51 };
-	VirtualProtect((LPVOID)0x42FE62, 6, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memcpy((LPVOID)0x42FE62, bFilenamePatch, 6);
-	VirtualProtect((LPVOID)0x42FE99, 6, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memcpy((LPVOID)0x42FE99, bFilenamePatch, 6);
+	SafePatchBytes((LPVOID)0x42FE62, bFilenamePatch, 6, "SaveHooks_CityNameFix1");
+	SafePatchBytes((LPVOID)0x42FE99, bFilenamePatch, 6, "SaveHooks_CityNameFix2");
 
 	// Adjust the Save File dialog type criterion
-	VirtualProtect((LPVOID)0x4E7344, 32, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memset((LPVOID)0x4E7344, 0, 32);
-	memcpy_s((LPVOID)0x4E7344, 32, "SimCity Files (*.sc2)|*.sc2||", 30);
+	BYTE zeros[32] = {};
+
+	SafePatchBytes(
+		(LPVOID)0x4E7344,
+		zeros, 
+		32,
+		"SaveHooks_DialogFilter_Zero"
+	);
+	SafePatchBytes(
+		(LPVOID)0x4E7344,
+		(const BYTE*)"SimCity Files (*.sc2)|*.sc2||",
+		30,
+		"SaveHooks_DialogFilter_Write"
+	);
 
 	// Fix save filenames going wonky
-	VirtualProtect((LPVOID)0x432870, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x432870, Hook_CheckAndAppendCityExtension);
+	SafePatchJmp(
+		(LPVOID)0x432870,
+		Hook_CheckAndAppendCityExtension,
+		"Hook_CheckAndAppendCityExtension"
+	);
 
 	// Fix $1500 neighbor connections on game load
-	VirtualProtect((LPVOID)0x434BEA, 6, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWCALL((LPVOID)0x434BEA, Hook_LoadNeighborConnections1500);
-	*(BYTE*)0x434BEF = 0x90;
+	SafePatchCall(
+		(LPVOID)0x434BEA,
+		Hook_LoadNeighborConnections1500,
+		"SaveHooks_NeighborConnections1500"
+	);
+	SafePatchNop(
+		(LPVOID)0x434BEF,
+		1,
+		"SaveHooks_NeighborConnections1500_Nop"
+	);
 
 	// Load game hook
-	VirtualProtect((LPVOID)0x4025A4, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4025A4, Hook_LoadGame);
+	SafePatchJmp(
+		(LPVOID)0x4025A4,
+		Hook_LoadGame,
+		"Hook_LoadGame"
+	);
 	
 	// Patch to stop CFile::CFile() from being called in exclusive mode when loading a game
+	// TODO what is the original intent here?
 	VirtualProtect((LPVOID)0x430118, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
 	*(DWORD*)0x430118 = 0x8040;
 
 	// Patch to attempt to fix loading partially corrupted saves
-	VirtualProtect((LPVOID)0x431212, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x431212, Hook_431212);
+	SafePatchJmp(
+		(LPVOID)0x431212,
+		Hook_431212,
+		"Hook_431212"
+	);
 
 	// Save game hook
-	VirtualProtect((LPVOID)0x401870, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401870, Hook_SaveGame);
+	SafePatchJmp(
+		(LPVOID)0x401870,
+		Hook_SaveGame,
+		"Hook_SaveGame"
+	);
 }

@@ -11,6 +11,7 @@
 #include <string>
 
 #include <sc2kfix.h>
+#include <hook_utils.h>
 
 #pragma intrinsic(_ReturnAddress)
 
@@ -801,6 +802,9 @@ extern "C" void __stdcall Hook_SimulationProposeMilitaryBase(void) {
 }
 
 void InstallMilitaryHooks_SC2K1996(void) {
-	VirtualProtect((LPVOID)0x403017, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x403017, Hook_SimulationProposeMilitaryBase);
+	SafePatchJmp(
+		(LPVOID)0x403017,
+		Hook_SimulationProposeMilitaryBase,
+		"Hook_SimulationProposeMilitaryBase"
+	);
 }

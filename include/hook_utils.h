@@ -38,3 +38,9 @@ bool SafeWrite(
 ) {
 	return SafePatchBytes(targetAddress, (const BYTE*)&value, sizeof(T), debugName);
 }
+
+bool SafePatchCall(
+	LPVOID targetAddress,
+	LPVOID hookFunction, 
+	const char* debugName
+);
