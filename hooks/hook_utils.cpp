@@ -64,7 +64,7 @@ bool SafePatchJmp(LPVOID targetAddress, LPVOID hookFunction, const char* debugNa
 }
 
 // ----------------------------------------------------------------
-// NOP patch
+// NOP patch (0x90)
 // ----------------------------------------------------------------
 struct NopParam { SIZE_T size; };
 

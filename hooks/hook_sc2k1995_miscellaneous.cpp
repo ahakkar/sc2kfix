@@ -18,6 +18,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 #pragma intrinsic(_ReturnAddress)
 
@@ -340,26 +341,24 @@ void InstallMiscHooks_SC2K1995(void) {
 	// Wipe out the call to UpdateSectionsAndResetWindowMenu() here
 	// otherwise it results in a crash if you cancel the LoadCity dialogue
 	// prior to starting any game.
-	VirtualProtect((LPVOID)0x42E746, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memset((LPVOID)0x42E746, 0x90, 5);
+	SafePatchNop((LPVOID)0x42E746, 5, "UpdateSectionsAndResetWindowMenu_call_fix");
 
 	// Wipe out the 'push'
-	VirtualProtect((LPVOID)0x42E732, 2, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memset((LPVOID)0x42E732, 0x90, 2);
+	SafePatchNop((LPVOID)0x42E732, 2, "UpdateSectionsAndResetWindowMenu_call_fix2");
+
 	// Detour and add the UpdateSectionsAndResetWindowMenu() call
 	// within this function (this replicates the behaviour in the
 	// 1996SE version).
-	VirtualProtect((LPVOID)0x42E737, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x42E737, Hook_1995_LoadCityCancelFix);
+	SafePatchJmp(
+		(LPVOID)0x42E737,
+		Hook_1995_LoadCityCancelFix,
+		"Hook_1995_LoadCityCancelFix"
+	);
 
 	// Fix the 'Arial" font
-	VirtualProtect((LPVOID)0x4E6234, 6, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memset((LPVOID)0x4E6234, 0, 6);
-	memcpy_s((LPVOID)0x4E6234, 6, "Arial", 6);
-	VirtualProtect((LPVOID)0x44D5C2, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x44D5C2 = 5;
-	VirtualProtect((LPVOID)0x44D5CF, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x44D5CF = 10;
+	SafePatchBytes((LPVOID)0x4E6234, (const BYTE*)"Arial", 6, "Arial_font_fix");
+	SafePatchByte((LPVOID)0x44D5C2, 5, "Arial_font_size_1");
+	SafePatchByte((LPVOID)0x44D5CF, 10, "Arial_font_size_2");
 
 	// Hook for CSimcityApp::InitInstance to bypass and fix:
 	// a) Set m_nCmdShow to 'SW_MAXIMIZE' by default rather than
@@ -371,29 +370,50 @@ void InstallMiscHooks_SC2K1995(void) {
 	//    (Win9x ShellOpen path conversion to DOS-type, of which didn't
 	//    occur from NT 5.0 and beyond).
 	// (This also accounts for the initial ShowWindow case)
-	VirtualProtect((LPVOID)0x405813, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x405813, Hook_1995_SimcityApp_InitInstanceFix);
+	SafePatchJmp(
+		(LPVOID)0x405813,
+		Hook_1995_SimcityApp_InitInstanceFix,
+		"Hook_1995_SimcityApp_InitInstanceFix"
+	);
 
 	// Hook CSimcityApp::OnQuit
-	VirtualProtect((LPVOID)0x401749, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401749, Hook_1995_SimcityApp_OnQuit);
+	SafePatchJmp(
+		(LPVOID)0x401749,
+		Hook_1995_SimcityApp_OnQuit,
+		"Hook_1995_SimcityApp_OnQuit"
+	);
 
 	// Set the initial program state to ONIDLE_STATE_DISPLAYMAXIS
-	VirtualProtect((LPVOID)0x4051DD, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(BYTE*)0x4051DD = ONIDLE_STATE_DISPLAYMAXIS;
+	SafePatchByte(
+		(LPVOID)0x4051DD,
+		ONIDLE_STATE_DISPLAYMAXIS,
+		"ONIDLE_STATE_DISPLAYMAXIS"
+	);
 
 	// Fix the Maxis Presents logo not being shown
-	VirtualProtect((LPVOID)0x4E5120, 13, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memset((LPVOID)0x4E5120, 0, 13);
-	memcpy_s((LPVOID)0x4E5120, 13, "presnts.bmp", 13);
+	// Reading invalid data from '"presnts.bmp"': 
+	// the readable size is '12' bytes, but '13' bytes may be read.
+	// Changed from 13 to 12 bytes
+	SafePatchBytes(
+		(LPVOID)0x4E5120, 
+		(const BYTE*)"presnts.bmp",
+		12,
+		"MaxisPresents_logo_fix"
+	);
 
 	// Hook CWnd::OnCommand
-	VirtualProtect((LPVOID)0x4A4246, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4A4246, Hook_1995_Wnd_OnCommand);
+	SafePatchJmp(
+		(LPVOID)0x4A4246,
+		Hook_1995_Wnd_OnCommand,
+		"Hook_1995_Wnd_OnCommand"
+	);
 
 	// Hook for CCmdUI::Enable
-	VirtualProtect((LPVOID)0x4A185E, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4A185E, Hook_1995_CmdUI_Enable);
+	SafePatchJmp(
+		(LPVOID)0x4A185E,
+		Hook_1995_CmdUI_Enable,
+		"Hook_1995_CmdUI_Enable"
+	);
 
 	// Add more buttons to SC2K's menus
 	hMainMenu = LoadMenu(hSC2KAppModule, MAKEINTRESOURCE(2));
@@ -424,7 +444,10 @@ void InstallMiscHooks_SC2K1995(void) {
 skipmainmenu:
 	
 	// Adjust the Save File dialog type criterion
-	VirtualProtect((LPVOID)0x4E6314, 32, PAGE_EXECUTE_READWRITE, &dwDummy);
-	memset((LPVOID)0x4E6314, 0, 32);
-	memcpy_s((LPVOID)0x4E6314, 32, "SimCity Files (*.sc2)|*.sc2||", 30);
+	SafePatchBytes(
+		(LPVOID)0x4E6314,
+		(const BYTE*)"SimCity Files (*.sc2)|*.sc2||", 
+		30,
+		"SaveFile_dialog_fix"
+	);
 }
