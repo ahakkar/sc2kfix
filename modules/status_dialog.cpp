@@ -13,6 +13,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 #pragma intrinsic(_ReturnAddress)
 
@@ -604,24 +605,39 @@ void InstallStatusHooks_SC2K1996(void) {
 	}
 
 	// Hook for CStatusControlBar::CreateStatusBar
-	VirtualProtect((LPVOID)0x40173A, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40173A, Hook_StatusControlBar_CreateStatusBar_SC2K1996);
+	SafePatchJmp(
+		(LPVOID)0x40173A,
+		Hook_StatusControlBar_CreateStatusBar_SC2K1996,
+		"Hook_StatusControlBar_CreateStatusBar_SC2K1996"
+	);
 
 	// Hook for CStatusControlBar::~CStatusControlBar
-	VirtualProtect((LPVOID)0x40240F, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40240F, Hook_StatusControlBar_DestructStatusBar_SC2K1996);
+	SafePatchJmp(
+		(LPVOID)0x40240F,
+		Hook_StatusControlBar_DestructStatusBar_SC2K1996,
+		"Hook_StatusControlBar_DestructStatusBar_SC2K1996"
+	);
 
 	// Hook for CStatusControlBar::UpdateStatusBar
-	VirtualProtect((LPVOID)0x40204F, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40204F, Hook_StatusControlBar_UpdateStatusBar_SC2K1996);
+	SafePatchJmp(
+		(LPVOID)0x40204F,
+		Hook_StatusControlBar_UpdateStatusBar_SC2K1996,
+		"Hook_StatusControlBar_UpdateStatusBar_SC2K1996"
+	);
 
 	// Hook for CMainFrame::ToggleStatusControlBar
-	VirtualProtect((LPVOID)0x4021A8, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4021A8, Hook_MainFrame_ToggleStatusControlBar_SC2K1996);
+	SafePatchJmp(
+		(LPVOID)0x4021A8,
+		Hook_MainFrame_ToggleStatusControlBar_SC2K1996,
+		"Hook_MainFrame_ToggleStatusControlBar_SC2K1996"
+	);
 
 	// Hook for CMainFrame::ToggleToolBars
-	VirtualProtect((LPVOID)0x40103C, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40103C, Hook_MainFrame_ToggleToolBars_SC2K1996);
+	SafePatchJmp(
+		(LPVOID)0x40103C,
+		Hook_MainFrame_ToggleToolBars_SC2K1996,
+		"Hook_MainFrame_ToggleToolBars_SC2K1996"
+	);
 }
 
 void UpdateStatus_SC2K1996(int iShow) {

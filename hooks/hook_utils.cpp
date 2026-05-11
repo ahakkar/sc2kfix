@@ -21,7 +21,8 @@ static bool UnprotectAndPatch(
             "[%s] VirtualQuery failed at %p (error %lu)",
             debugName,
             targetAddress,
-            GetLastError()
+            GetLastError(),
+            "\n"
         );
 
         return false;
@@ -32,7 +33,8 @@ static bool UnprotectAndPatch(
             "[%s] Memory at %p is not committed (state: 0x%lX)",
             debugName,
             targetAddress,
-            mbi.State
+            mbi.State,
+            "\n"
         );
 
         return false;
