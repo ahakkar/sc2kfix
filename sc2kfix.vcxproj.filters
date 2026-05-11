@@ -258,7 +258,7 @@
     <ClInclude Include="include\setting_schema.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hook_utils.h">
+    <ClInclude Include="include\hook_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -482,7 +482,7 @@
     <ClCompile Include="modules\console_new.cpp">
       <Filter>Source Files\Modules</Filter>
     </ClCompile>
-    <ClCompile Include="hook_utils.cpp">
+    <ClCompile Include="hooks\hook_utils.cpp">
       <Filter>Source Files\Hooks</Filter>
     </ClCompile>
   </ItemGroup>

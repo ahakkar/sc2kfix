@@ -12,6 +12,7 @@
 
 #include <sc2kfix.h>
 #include "../resource.h"
+#include <hook_utils.h>
 
 #pragma intrinsic(_ReturnAddress)
 
@@ -1090,36 +1091,60 @@ extern "C" __int16 __cdecl Hook_PointToTile(__int16 x, __int16 y) {
 
 void InstallDrawingHooks_SC2K1996(void) {
 	// Hook for DrawAllLarge
-	VirtualProtect((LPVOID)0x4017FD, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4017FD, Hook_DrawAllLarge);
+	SafePatchJmp(
+		(LPVOID)0x4017FD,
+		Hook_DrawAllLarge,
+		"Hook_DrawAllLarge"
+	);
 
 	// Hook for DrawLargeTile
-	VirtualProtect((LPVOID)0x402095, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402095, Hook_DrawLargeTile);
+	SafePatchJmp(
+		(LPVOID)0x402095,
+		Hook_DrawLargeTile,
+		"Hook_DrawLargeTile"
+	);
 
 	// Hook for DrawSmallTile
-	VirtualProtect((LPVOID)0x401E79, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401E79, Hook_DrawSmallTile);
+	SafePatchJmp(
+		(LPVOID)0x401E79,
+		Hook_DrawSmallTile,
+		"Hook_DrawSmallTile"
+	);
 
 	// Hook for DrawTinyTile
-	VirtualProtect((LPVOID)0x4022D9, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x4022D9, Hook_DrawTinyTile);
+	SafePatchJmp(
+		(LPVOID)0x4022D9,
+		Hook_DrawTinyTile,
+		"Hook_DrawTinyTile"
+	);
 
 	// Hook for DrawAllUnder
-	VirtualProtect((LPVOID)0x40251D, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x40251D, Hook_DrawAllUnder);
+	SafePatchJmp(
+		(LPVOID)0x40251D,
+		Hook_DrawAllUnder,
+		"Hook_DrawAllUnder"
+	);
 
 	// Hook for DrawUnderTile
-	VirtualProtect((LPVOID)0x402D9C, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402D9C, Hook_DrawUnderTile);
+	SafePatchJmp(
+		(LPVOID)0x402D9C,
+		Hook_DrawUnderTile,
+		"Hook_DrawUnderTile"
+	);
 
 	// Hook for DrawColorTile
-	VirtualProtect((LPVOID)0x402F6D, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x402F6D, Hook_DrawColorTile);
+	SafePatchJmp(
+		(LPVOID)0x402F6D,
+		Hook_DrawColorTile,
+		"Hook_DrawColorTile"
+	);
 
 	// Hook for PointToTile
-	VirtualProtect((LPVOID)0x401D16, 5, PAGE_EXECUTE_READWRITE, &dwDummy);
-	NEWJMP((LPVOID)0x401D16, Hook_PointToTile);
+	SafePatchJmp(
+		(LPVOID)0x401D16,
+		Hook_PointToTile,
+		"Hook_PointToTile"
+	);
 
 	UpdateDrawingHooks_SC2K1996();
 }
@@ -1132,18 +1157,12 @@ void UpdateDrawingHooks_SC2K1996(void) {
 		undgrndBkgnd = PALETTERGB(60, 60, 60);    // Dark Grey
 
 	// Set via InitializeDataColorsFonts() first (on program load).
-	VirtualProtect((LPVOID)0x42C008, 4, PAGE_EXECUTE_READWRITE, &dwDummy);
-	*(COLORREF *)0x42C008 = undgrndBkgnd;
+	SafeWrite<COLORREF>((LPVOID)0x42C008, undgrndBkgnd, "UndergroundBkgndColor");
 
 	// Set to the actual variable second (during runtime).
 	colGameBackgndUnder = undgrndBkgnd;
 
-	if (bMapWireFrame) {
-		// Set via InitializeDataColorsFonts() first (on program load).
-		VirtualProtect((LPVOID)0x42BFFE, 4, PAGE_EXECUTE_READWRITE, &dwDummy);
-		*(COLORREF *)0x42BFFE = undgrndBkgnd;
-
-		// Set to the actual variable second (during runtime).
-		colGameBackgndAbove = undgrndBkgnd;
+	if (bMapWireFrame) {		
+		SafeWrite<COLORREF>((LPVOID)0x42BFFE, undgrndBkgnd, "AbovegroundBkgndColor");
 	}
 }

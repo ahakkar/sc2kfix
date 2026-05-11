@@ -29,3 +29,12 @@ bool SafePatchBytes(
 	SIZE_T size,
 	const char* debugName
 );
+
+template <typename T>
+bool SafeWrite(
+	LPVOID targetAddress,
+	T value,
+	const char* debugName
+) {
+	return SafePatchBytes(targetAddress, (const BYTE*)&value, sizeof(T), debugName);
+}
