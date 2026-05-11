@@ -18,6 +18,7 @@
 #include <sc2kfix.h>
 #include <winmm_exports.h>
 #include "resource.h"
+#include <hook_utils.h>
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -481,11 +482,16 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved) {
 		}
 
 		if (bCanFixDialogCrash) {
-			VirtualProtect(lpDialogFix1, 1, PAGE_EXECUTE_READWRITE, &dwDummy);
-			*(LPBYTE)lpDialogFix1 = 0x20;
-			VirtualProtect(lpDialogFix2, 2, PAGE_EXECUTE_READWRITE, &dwDummy);
-			*(LPBYTE)lpDialogFix2 = 0xEB;
-			*(LPBYTE)((UINT_PTR)lpDialogFix2 + 1) = 0xEB;
+			SafePatchByte(lpDialogFix1, 0x20, "lpDialogFix1_TypeChange");
+
+			const BYTE dialogPatch2[] = { 0xEB, 0xEB };
+			SafePatchBytes(
+				lpDialogFix2,
+				dialogPatch2,
+				sizeof(dialogPatch2),
+				"lpDialogFix2_JmpShort"
+			);
+	
 			ConsoleLog(LOG_INFO, "CORE: Patched dialog crash fix.\n");
 		}
 
@@ -521,11 +527,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved) {
 		}
 
 		if (bCanFixPaletteWarnings) {
-			VirtualProtect(lpWarningFix1, 2, PAGE_EXECUTE_READWRITE, &dwDummy);
-			VirtualProtect(lpWarningFix2, 18, PAGE_EXECUTE_READWRITE, &dwDummy);
-			*(LPBYTE)lpWarningFix1 = 0x90;
-			*(LPBYTE)((UINT_PTR)lpWarningFix1 + 1) = 0x90;
-			memset((LPVOID)lpWarningFix2, 0x90, 18);   // nop nop nop nop nop
+			SafePatchNop(lpWarningFix1, 2, "lpWarningFix1");			
+			SafePatchNop(lpWarningFix2, 18, "lpWarningFix2");
 			ConsoleLog(LOG_INFO, "CORE: Patched 8-bit colour warnings.\n");
 		}
 
